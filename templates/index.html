@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cold Email Generator</title>
+</head>
+<body>
+  
+
+  <h2>Cold Email Generator</h2>
+
+  <label>Their Name</label>
+  <input id="name" placeholder="John Smith" />
+
+  <label>Their Role</label>
+  <input id="role" placeholder="Engineering Manager" />
+
+  <label>Their Company</label>
+  <input id="company" placeholder="Google" />
+
+  <label>Their Email</label>
+  <input id="to_email" placeholder="john@google.com" />
+
+  <label>Their LinkedIn Profile PDF</label>
+  <input type="file" id="linkedin_pdf" accept=".pdf" />
+
+  <button onclick="generate()">Generate Email</button>
+
+  <div id="email-box"></div>
+
+  <div id="send-section">
+    <label>Subject Line</label>
+    <input id="subject" />
+    <button onclick="sendEmail()">Send via Gmail</button>
+    <p id="send-status"></p>
+  </div>
+  <script>
+  async function generate() {
+    const name = document.getElementById('name').value;
+    const role = document.getElementById('role').value;
+    const company = document.getElementById('company').value;
+    const to_email = document.getElementById('to_email').value;
+    const linkedin_pdf = document.getElementById('linkedin_pdf').files[0];
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('role', role);
+    formData.append('company', company);
+    formData.append('to_email', to_email);
+    formData.append('linkedin_pdf', linkedin_pdf);
+
+    document.getElementById('email-box').textContent = 'Generating...';
+
+    const res = await fetch('/generate', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    document.getElementById('email-box').textContent = data.email;
+    document.getElementById('subject').value = data.subject;
+    document.getElementById('send-section').style.display = 'block';
+  }
+
+  async function sendEmail() {
+    const body = document.getElementById('email-box').textContent;
+    const to_email = document.getElementById('to_email').value;
+    const subject = document.getElementById('subject').value;
+
+    document.getElementById('send-status').textContent = 'Sending...';
+
+    const res = await fetch('/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to_email, subject, body })
+    });
+
+    const data = await res.json();
+    document.getElementById('send-status').textContent = data.success ? 'Email sent!' : 'Error: ' + data.error;
+  }
+</script>
+
+</body>
+</html>
